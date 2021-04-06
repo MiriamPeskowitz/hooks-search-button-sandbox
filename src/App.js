@@ -8,14 +8,23 @@ const App = () => {
   const [ data, setData ] = useState({ hits: [] })
   const [ query, setQuery ] = useState('redux')
   const [ url, setUrl ] = useState(`https://hn.algolia.com/api/v1/search?query=redux`)
+  const [ isLoading, setIsLoading ] = useState(false)
+  const [isError, setIsError] = useState(false)
   // const url= `https://hn.algolia.com/api/v1/search?query=query //or =search`
   
   useEffect( () => {
     const fetchData = async () => {
-      const result = await axios(url)
-      setData(result.data)
-      console.log(url)
-      console.log(result.data)
+      setIsError(false)  
+      setIsLoading(true)
+
+      try {
+        const result = await axios(url)
+        setData(result.data)
+      } catch (error) {
+        setIsError(true)
+      }
+      setIsLoading(false)
+
     } 
   fetchData()
   }, [url]) //change value in input field
@@ -23,17 +32,22 @@ const App = () => {
 
   return (
     <>
+      <form onSubmit={event => {
+        setUrl(`https://hn.algolia.com/api/v1/search?query=${query}`)
+        event.preventDefault()
+      }}>
       <input 
         type="text"
         value={query}
         onChange = {event => setQuery(event.target.value)}
         />
-        <button
-          type="button"
-          onClick={() => setUrl(`https://hn.algolia.com/api/v1/search?query=${query}`)}
-        >
-          Search
-        </button>
+        <button type="submit">Search</button>
+
+      { isError && <div>Something went wrong ...</div> }
+
+      {isLoading ? (
+        <div>Loading ...</div>
+        ) : (
       <ul>
         {data.hits.map(item => (
           <li key={item.objectID}>
@@ -42,31 +56,9 @@ const App = () => {
           )
         )}
       </ul>
+      )}
+      </form>
     </>
   )
-}
+};
 export default App;
-
-//cant use async directly in an effect 
-
- // useEffect(async () => {
- //    const result = await axios(url)
- //    setData(result.data)
- //    console.log(result.data)
- //  }, [])
-
-// const App = () => {
-//   const [name, setName] = useState('world')
-  
-//   useEffect(() => {
-//     document.title= `Hello, ${name}`
-//   });
-
-//   return (
-//     <div className="App">
-//      <h1>Hello {name} </h1>
-//      <button onClick={() => setName('Jim')}>
-//      Click to change name </button>
-//     </div>
-//   );
-// }
